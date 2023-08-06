@@ -30,6 +30,47 @@ public class AirportController
         return "SUCCESS";
     }
 
+    @PostMapping("/add-passenger")
+    public String addPassenger(@RequestBody Passenger passenger)
+    {
+
+        //Add a passenger to the database
+        //And return a "SUCCESS" message if the passenger has been added successfully.
+
+        return tripService.addPassenger(passenger);
+    }
+
+    @PostMapping("/add-flight")
+    public String addFlight(@RequestBody Flight flight)
+    {
+
+        //Return a "SUCCESS" message string after adding a flight.
+        return tripService.addFlight(flight);
+    }
+
+    @PostMapping("/book-a-ticket")
+    public String bookATicket(@RequestParam("flightId")Integer flightId,@RequestParam("passengerId")Integer passengerId)
+    {
+
+        //If the numberOfPassengers who have booked the flight is greater than : maxCapacity, in that case :
+        //return a String "FAILURE"
+        //Also if the passenger has already booked a flight then also return "FAILURE".
+        //else if you are able to book a ticket then return "SUCCESS"
+
+        return tripService.bookATicket(flightId,passengerId);
+    }
+
+    @PutMapping("/cancel-a-ticket")
+    public String cancelATicket(@RequestParam("flightId")Integer flightId,@RequestParam("passengerId")Integer passengerId){
+
+        //If the passenger has not booked a ticket for that flight or the flightId is invalid or in any other failure case
+        // then return a "FAILURE" message
+        // Otherwise return a "SUCCESS" message
+        // and also cancel the ticket that passenger had booked earlier on the given flightId
+
+        return tripService.cancelATicket(flightId,passengerId);
+    }
+
     @GetMapping("/get-largest-aiport")
     public String getLargestAirportName(){
 
@@ -71,43 +112,12 @@ public class AirportController
     }
 
 
-    @PostMapping("/book-a-ticket")
-    public String bookATicket(@RequestParam("flightId")Integer flightId,@RequestParam("passengerId")Integer passengerId)
-    {
-
-        //If the numberOfPassengers who have booked the flight is greater than : maxCapacity, in that case :
-        //return a String "FAILURE"
-        //Also if the passenger has already booked a flight then also return "FAILURE".
-        //else if you are able to book a ticket then return "SUCCESS"
-
-        return tripService.bookATicket(flightId,passengerId);
-    }
-
-    @PutMapping("/cancel-a-ticket")
-    public String cancelATicket(@RequestParam("flightId")Integer flightId,@RequestParam("passengerId")Integer passengerId){
-
-        //If the passenger has not booked a ticket for that flight or the flightId is invalid or in any other failure case
-        // then return a "FAILURE" message
-        // Otherwise return a "SUCCESS" message
-        // and also cancel the ticket that passenger had booked earlier on the given flightId
-
-        return tripService.cancelATicket(flightId,passengerId);
-    }
-
 
     @GetMapping("/get-count-of-bookings-done-by-a-passenger/{passengerId}")
     public int countOfBookingsDoneByPassengerAllCombined(@PathVariable("passengerId")Integer passengerId){
 
         //Tell the count of flight bookings done by a passenger: This will tell the total count of flight bookings done by a passenger :
         return tripService.countOfBookingsDoneByPassengerAllCombined(passengerId);
-    }
-
-    @PostMapping("/add-flight")
-    public String addFlight(@RequestBody Flight flight)
-    {
-
-        //Return a "SUCCESS" message string after adding a flight.
-        return tripService.addFlight(flight);
     }
 
 
@@ -134,16 +144,6 @@ public class AirportController
         return tripService.calculateRevenueOfAFlight(flightId);
     }
 
-
-    @PostMapping("/add-passenger")
-    public String addPassenger(@RequestBody Passenger passenger)
-    {
-
-        //Add a passenger to the database
-        //And return a "SUCCESS" message if the passenger has been added successfully.
-
-        return tripService.addPassenger(passenger);
-    }
 
 
 }

@@ -11,10 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class TripService
@@ -96,34 +93,28 @@ public class TripService
         //return a String "FAILURE"
         //Also if the passenger has already booked a flight then also return "FAILURE".
         //else if you are able to book a ticket then return "SUCCESS"
-        Map<Integer,List<Passenger>> flightPassangerMap=tripRepository.getFlightPassangerMap();
-
-        List<Passenger>list=flightPassangerMap.getOrDefault(flightId,new ArrayList<>());
-
-        Map<Integer,Flight>flightMap=tripRepository.getFlightMap();
-        if(flightMap.get(flightId).getMaxCapacity()<=list.size())return "FAILURE";
-
-
         Map<Integer,List<Flight>>bookedFlightByPassanger=tripRepository.getBookedFlightByPassanger();
-        /*
-         *It may fail... when passenger has already booked a tiket..
-         */
-        if(bookedFlightByPassanger.containsKey(passangerId))
+        Map<Integer, Passenger>passengerMap=tripRepository.getPassengerMap();
+        Map<Integer, Flight>flightMap=tripRepository.getFlightMap();
+
+        if(!flightMap.containsKey(flightId) || !passengerMap.containsKey(passangerId))return "FAILURE";
+
+        //It is present in the booked Flight map..
+        for(Flight flight:bookedFlightByPassanger.getOrDefault(passangerId,new ArrayList<>()))
         {
-            //this means passengers has already booked the ticket..
-            //List of the passenger.. for this flight..
-            List<Passenger> tempList=flightPassangerMap.get(flightId);
-            for(Passenger p:tempList)
-            {
-                if(passangerId.equals(p.getPassengerId()))return "Failure";
-            }
+            if(flightId.equals(flight.getFlightId()))return "FAILURE";
         }
+        Map<Integer, List<Passenger>>flightPassangerMap=tripRepository.getFlightPassangerMap();
+        List<Passenger>passengerList=flightPassangerMap.getOrDefault(flightId,new ArrayList<>());
+        if(flightMap.get(flightId).getMaxCapacity()<=passengerList.size())return "FAILURE";
+
+        List<Flight> flights=bookedFlightByPassanger.getOrDefault(passangerId,new ArrayList<>());
+        flights.add(flightMap.get(flightId));
+        bookedFlightByPassanger.put(passangerId,flights);
 
 
-        Map<Integer,Passenger>passengerMap=tripRepository.getPassengerMap();
-        list.add(passengerMap.get(passangerId));
-
-        flightPassangerMap.put(flightId,list);
+        passengerList.add(passengerMap.get(passangerId));
+        flightPassangerMap.put(flightId,passengerList);
 
         return "SUCCESS";
     }
@@ -134,24 +125,26 @@ public class TripService
         // then return a "FAILURE" message
         // Otherwise return a "SUCCESS" message
         // and also cancel the ticket that passenger had booked earlier on the given flightId
-        Map<Integer,Flight>flightMap=tripRepository.getFlightMap();
-        if(flightMap.containsKey(flightId))return "FAILURE";
+        Map<Integer, Flight>flightMap=tripRepository.getFlightMap();
+        //If flight is Invalid..
+        if(flightMap.containsKey(flightId)==false)return "FAILURE";
 
-        Map<Integer,Passenger>passengerMap=tripRepository.getPassengerMap();
-        if(!passengerMap.containsKey(passengerId))return "FAILURE";
-        //this shows booked Flight by passanger..
+        Map<Integer, Passenger>passengerMap=tripRepository.getPassengerMap();
+        if(passengerMap.containsKey(passengerId)==false)return "FAILURE";
+
         Map<Integer,List<Flight>>bookedFlightByPassanger=tripRepository.getBookedFlightByPassanger();
-
         if(!bookedFlightByPassanger.containsKey(passengerId))return "FAILURE";
-        List<Flight>flightList= bookedFlightByPassanger.get(passengerId);
-        Flight flightToRemove=flightMap.get(flightId);
-        flightList.remove(flightToRemove);
+
+        //here means It was present... here we go to delete it..
+        List<Flight>flightList=bookedFlightByPassanger.get(passengerId);
+        if(flightList.contains(flightMap.get(flightId))==false)return "FAILURE";
+        flightList.remove(flightMap.get(flightId));
+        if(flightList.size()==0)bookedFlightByPassanger.remove(passengerId);
 
         Map<Integer, List<Passenger>>flightPassangerMap=tripRepository.getFlightPassangerMap();
 
-        //I'll have to remove the from the flightPassanger Map..
-        List<Passenger>list=flightPassangerMap.get(flightId);
-        list.remove(passengerMap.get(passengerId));
+        List<Passenger>passengerList=flightPassangerMap.get(flightId);
+        passengerList.remove(passengerMap.get(passengerId));
 
         return "SUCCESS";
     }
